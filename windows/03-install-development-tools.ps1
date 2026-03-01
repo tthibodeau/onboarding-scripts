@@ -14,6 +14,7 @@ Write-Host ""
 # Install common development tools
 $developmentTools = @(
 	@{AppId = "Git.Git"; DisplayName = "Git" },
+	@{AppId = "GitHub.cli"; DisplayName = "GitHub CLI" },
 	@{AppId = "Fork.Fork"; DisplayName = "Git Fork Desktop Client" },
 	@{AppId = "Microsoft.DotNet.SDK.9"; DisplayName = ".NET Core 9 SDK" },
 	@{AppId = "Microsoft.VisualStudioCode"; DisplayName = "Visual Studio Code" },
