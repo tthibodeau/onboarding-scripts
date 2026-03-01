@@ -20,7 +20,8 @@ $developmentTools = @(
 	@{AppId = "Docker.DockerDesktop"; DisplayName = "Docker Desktop" },
 	@{AppId = "CoreyButler.NVMforWindows"; DisplayName = "NVM for Windows" },
 	@{AppId = "pnpm.pnpm"; DisplayName = "pnpm" },
-	@{AppId = "nektos.act"; DisplayName = "GitHub Actions Tester" }
+	@{AppId = "nektos.act"; DisplayName = "GitHub Actions Tester" },
+	@{AppId = "Anthropic.ClaudeCode"; DisplayName = "Claude Code" }
 )
 
 
