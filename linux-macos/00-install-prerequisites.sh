@@ -196,9 +196,8 @@ EOL
       else
         git config --global core.sshCommand "$(which ssh)"
         echo "✅ 1Password / Git SSH integration configured"
-        echo "Follow 1Password Git commit signing steps in the handbook (https://www.notion.so/provisionanalytics/1Password-Required-Setup-11a2dc0994d580afaa49d51556e17d94)"
       fi
-      
+
       echo "✅ 1Password-CLI installed successfully"
     }
 

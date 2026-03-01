@@ -14,6 +14,3 @@ Use the scripts below for your OS environment to quickly create your default she
 - <img src="./windows/images/PowerShell_7_icon.svg" alt="PSCore7" style="width: 20px; height: 20px;"> **PowerShell Core (7+)** scripts for automated installation of development tools, WSL2, Docker Desktop, Azure tools, and Windows productivity applications
 - [View Windows setup scripts](./windows)
 
-<br/>
-
-> See [Engineering Handbook -> Workstation Configuration](https://www.notion.so/provisionio/Workstation-Configuration-54213bea9d134ebbaf39773b08339d9c#b5756ccbc9784d9898235e1c688182c8)
