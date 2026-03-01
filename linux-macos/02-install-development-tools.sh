@@ -16,6 +16,7 @@ sudo -v
 common_brew_apps=(
 	nvm
 	pnpm
+	oven-sh/bun/bun
 	act
 	nuget
 )
@@ -109,26 +110,6 @@ install_mac_tools() {
 
 }
 
-install_V1_dev_tools() {
-	read -p "Do you want to install the V1 Provision application development tools? (y/N): " install_v1
-	if [[ "$install_v1" =~ ^[Yy]$ ]]; then
-		echo "📥 Installing V1 Provision application development tools..."
-	else
-		echo "⏭️  Skipping V1 Provision application development tools installation."
-		return
-	fi
-
-	brew install maven node eslint sass/sass/sass n # n - node version management
-
-	# Install SDKMAN https://sdkman.io/install
-	curl -s "https://get.sdkman.io" | bash
-	source "$HOME/.sdkman/bin/sdkman-init.sh"
-
-	# https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html
-	# Adoptium Eclipse-Temurin is the recommended Java JDK now...wait 5 minutes til that changes..https://adoptium.net/installation/
-	sdk install java 11.0.16-tem 2>/dev/null #ignore all the lchmod errors. It's caused by brew/unzip compilation stuff https://github.com/sdkman/sdkman-cli/issues/790
-	# sdk install java 2> /dev/null  #ignore all the lchmod errors. It's caused by brew/unzip compilation stuff https://github.com/sdkman/sdkman-cli/issues/790
-}
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
 	install_linux_tools
@@ -136,6 +117,5 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 	install_mac_tools
 fi
 install_common_tools
-install_V1_dev_tools
 
 # No apt commands found - file is already compatible
