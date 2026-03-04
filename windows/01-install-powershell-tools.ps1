@@ -142,9 +142,12 @@ if ($themeFile -and (Test-Path $themeFile)) {
 # # Posh-CLI - https://github.com/bergmeister/posh-cli
 # # posh-cli util - looks for locally installed CLIs for which tab-completion modules are available, installs them, and adds
 Install-ModuleIfMissing -CheckForUpdates:$CheckForUpdates -Force -AddImportToProfile -ModuleName "posh-cli" -DisplayName "Posh-CLI Autocompletion"
+Install-TabCompletion
 
 # 1Password CLI tab completion
 Add-ProfileContent -Content "op completion powershell | Out-String | Invoke-Expression" # Add to Powershell CLI completion to startup profile
+
+
 
 Write-Host ""
 Write-Host ""
