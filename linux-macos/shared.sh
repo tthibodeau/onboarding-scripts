@@ -46,7 +46,17 @@ run_quiet() {
 		printf "\b✅\n"
 	else
 		printf "\b❌\n"
-		echo "    See log: $SETUP_LOG"
+		# Extract the error for this specific section from the log
+		local err_line
+		err_line=$(sed -n "/^=== $desc ===/,/^===/p" "$SETUP_LOG" 2>/dev/null \
+			| grep -iE 'error|failed|fatal|unable|not found|no such|denied' \
+			| grep -viE 'warning|silentlycontinue|erroraction|already|up-to-date|autoremove' \
+			| tail -1)
+		if [ -n "$err_line" ]; then
+			echo "    ${err_line:0:100}"
+		fi
+		# Mark as failed in log for post-setup parsing (desc|reason)
+		echo "FAILED: $desc|${err_line:-unknown error}" >> "$SETUP_LOG"
 	fi
 
 	return $exit_code
@@ -93,7 +103,7 @@ detect_distro() {
 
 pkg_update() {
 	case "$PKG_MANAGER" in
-		apt) run_quiet "Updating package lists" sudo apt-get update ;;
+		apt) run_quiet "Updating package lists" bash -c 'sudo apt-get update || true' ;;
 		dnf) run_quiet "Updating package lists" sudo dnf check-update || true ;;
 		pacman) run_quiet "Updating package lists" sudo pacman -Sy ;;
 	esac

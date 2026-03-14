@@ -20,6 +20,7 @@ BREW_FORMULAS=(
 	sevenzip
 	zip
 	unzip
+	powershell
 )
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -46,30 +47,6 @@ install_microsoft_repo() {
 				(cd /tmp/yay && makepkg -si --noconfirm)
 				rm -rf /tmp/yay
 			fi
-			;;
-	esac
-}
-
-install_powershell() {
-	PWSH_VERSION=$(pwsh --version 2>/dev/null)
-	if [ -n "$PWSH_VERSION" ]; then
-		status "✅ PowerShell ($PWSH_VERSION)"
-		return
-	fi
-
-	PWSH_NEEDS_BREW=false
-	case "$PKG_MANAGER" in
-		apt|dnf)
-			if pkg_try_install powershell; then
-				status "✅ PowerShell installed"
-			else
-				status "⚠️  PowerShell not available via $PKG_MANAGER — will install via Homebrew"
-				PWSH_NEEDS_BREW=true
-			fi
-			;;
-		pacman)
-			AUR_HELPER=$(get_aur_helper)
-			run_quiet "Installing PowerShell (AUR)" $AUR_HELPER -S --needed --noconfirm powershell-bin
 			;;
 	esac
 }
@@ -150,7 +127,6 @@ pkg_install curl wget
 run_quiet "Adding Microsoft repository" install_microsoft_repo
 pkg_update
 pkg_install "${SYSTEM_PACKAGES[@]}"
-install_powershell
 run_quiet "Installing 1Password" install_1password
 # Nerd fonts only needed on native Linux — WSL uses Windows-side fonts
 if [ -z "$WSL_DISTRO_NAME" ]; then
@@ -163,13 +139,9 @@ init_brew_env
 brew_update
 install_brew_formulas "${BREW_FORMULAS[@]}"
 
-# Deferred PowerShell brew install (if native package was unavailable)
-if [ "$PWSH_NEEDS_BREW" = true ]; then
-	brew_install powershell
-fi
 
-append_to_profile ~/.profile 'eval $($(which brew) shellenv)'
-append_to_profile ~/.bashrc 'eval $($(which brew) shellenv)'
+append_to_profile ~/.profile 'command -v brew &>/dev/null && eval $($(which brew) shellenv)'
+append_to_profile ~/.bashrc 'command -v brew &>/dev/null && eval $($(which brew) shellenv)'
 append_to_zshrc 'eval $($(which brew) shellenv)'
 
 configure_git

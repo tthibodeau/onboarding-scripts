@@ -23,7 +23,8 @@ BREW_FORMULAS=(
 
 install_claude_code() {
 	run_quiet "Installing Claude Code CLI" bash -c 'curl -fsSL https://claude.ai/install.sh | bash'
-	export PATH="$HOME/.claude/bin:$PATH"
+	export PATH="$HOME/.local/bin:$HOME/.claude/bin:$PATH"
+	append_to_zshrc 'export PATH="$HOME/.local/bin:$PATH"'
 	append_to_zshrc 'export PATH="$HOME/.claude/bin:$PATH"'
 }
 

@@ -138,67 +138,61 @@ post_setup() {
 	echo ""
 
 	if [ ! -f "$SETUP_LOG" ]; then
-		echo "  📋 No log file found."
+		echo "  ✅ No issues"
 		return
 	fi
 
-	# Check log for errors
-	local errors
-	errors=$(grep -ciE '^E:|error:|failed|fatal' "$SETUP_LOG" 2>/dev/null || echo 0)
-	if [ "$errors" -gt 0 ]; then
-		echo "  ⚠️  $errors issue(s) detected — review: $SETUP_LOG"
-	else
-		echo "  ✅ No errors detected"
-	fi
-	echo ""
+	# Find failed installs from FAILED: markers written by run_quiet (format: FAILED: desc|reason)
+	local failures
+	failures=$(grep '^FAILED: ' "$SETUP_LOG" 2>/dev/null | sed 's/^FAILED: //' | sort -u)
 
-	# Parse log for suggested commands and actionable items
-	local actions
-	actions=$(grep -oiE \
-		"(sudo [a-z]+ [a-z-]+|use '[^']+')|(log out|restart|reboot|you may need to)[^.]*" \
-		"$SETUP_LOG" 2>/dev/null | sort -u)
-
-	if [ -z "$actions" ]; then
-		echo "  📋 Full log: $SETUP_LOG"
+	if [ -n "$failures" ]; then
+		echo "  ❌ Failed:"
+		while IFS='|' read -r desc reason; do
+			echo "    • $desc"
+			if [ -n "$reason" ] && [ "$reason" != "unknown error" ]; then
+				echo "      ${reason:0:100}"
+			fi
+		done <<< "$failures"
 		echo ""
-		return
 	fi
 
-	# Extract runnable commands (lines starting with sudo or wrapped in quotes)
-	local runnable
-	runnable=$(echo "$actions" | grep -oE "sudo [a-z]+ [a-z-]+" | sort -u)
+	# Find actionable suggestions (e.g. "sudo apt autoremove")
+	local cleanup
+	cleanup=$(grep -oE "Use '([^']+)'" "$SETUP_LOG" 2>/dev/null \
+		| sed "s/^Use '//;s/'$//" | sort -u \
+		| grep -v 'brew reinstall')
 
-	# Extract non-runnable reminders
-	local reminders
-	reminders=$(echo "$actions" | grep -ivE "^sudo " | sed "s/^[Uu]se '//;s/'$//" | sort -u)
-
-	# Show everything found
-	if [ -n "$runnable" ]; then
+	if [ -n "$cleanup" ]; then
 		echo "  Cleanup tasks:"
 		while IFS= read -r cmd; do
 			echo "    • ${cmd#sudo }"
-		done <<< "$runnable"
+		done <<< "$cleanup"
 		echo ""
-	fi
 
-	if [ -n "$reminders" ]; then
-		echo "  Manual steps:"
-		while IFS= read -r reminder; do
-			echo "    ⚡ $reminder"
-		done <<< "$reminders"
-		echo ""
-	fi
-
-	# Offer to run all commands at once
-	if [ -n "$runnable" ]; then
 		read -p "  Run all cleanup tasks? [Y/n] " ans
 		if [[ "${ans:-Y}" =~ ^[Yy]$ ]]; then
 			echo ""
 			while IFS= read -r cmd; do
 				run_quiet "${cmd#sudo }" $cmd
-			done <<< "$runnable"
+			done <<< "$cleanup"
 		fi
 		echo ""
+	fi
+
+	# Find reminders (log out, restart, font, etc.)
+	local reminders
+	reminders=$(grep -oiE '(you may need to|note:)[^.]*' "$SETUP_LOG" 2>/dev/null | sort -u)
+	if [ -n "$reminders" ]; then
+		echo "  Reminders:"
+		while IFS= read -r reminder; do
+			echo "    ⚡ ${reminder#note: }"
+		done <<< "$reminders"
+		echo ""
+	fi
+
+	if [ -z "$failures" ] && [ -z "$cleanup" ] && [ -z "$reminders" ]; then
+		echo "  ✅ No issues"
 	fi
 
 	echo "  📋 Full log: $SETUP_LOG"

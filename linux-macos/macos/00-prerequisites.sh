@@ -35,8 +35,8 @@ install_brew_formulas "${BREW_FORMULAS[@]}"
 install_brew_casks "${BREW_CASKS[@]}"
 
 # Add brew to shell profiles
-append_to_profile ~/.profile 'eval $($(which brew) shellenv)'
-append_to_profile ~/.bashrc 'eval $($(which brew) shellenv)'
+append_to_profile ~/.profile 'command -v brew &>/dev/null && eval $($(which brew) shellenv)'
+append_to_profile ~/.bashrc 'command -v brew &>/dev/null && eval $($(which brew) shellenv)'
 append_to_zshrc 'eval $($(which brew) shellenv)'
 
 configure_git
