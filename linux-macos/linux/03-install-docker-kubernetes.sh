@@ -35,7 +35,7 @@ else
 		apt)
 			echo "Installing Docker CLI tools..."
 			pkg_update
-			pkg_install docker.io
+			pkg_install docker.io docker-compose-v2
 			;;
 		dnf)
 			echo "Installing Docker CE..."

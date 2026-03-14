@@ -9,7 +9,6 @@ prompt_sudo
 common_brew_apps=(
 	nvm
 	pnpm
-	oven-sh/bun/bun
 	act
 	nuget
 )
@@ -28,6 +27,11 @@ brew update
 for app in "${common_brew_apps[@]}"; do
 	brew install "$app"
 done
+
+# Bun - use official install script (brew bottle not available on Linux)
+curl -fsSL https://bun.sh/install | bash
+echo 'export BUN_INSTALL="$HOME/.bun"' >> ~/.zshrc
+echo 'export PATH="$BUN_INSTALL/bin:$PATH"' >> ~/.zshrc
 
 configure_nvm() {
 	mkdir -p ~/.nvm

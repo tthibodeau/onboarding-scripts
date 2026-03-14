@@ -72,6 +72,11 @@ assert_not_root() {
 }
 
 prompt_sudo() {
+	# Check if sudo is already available (e.g. NOPASSWD configured)
+	if sudo -n true 2>/dev/null; then
+		echo "🛡️ sudo access confirmed."
+		return
+	fi
 	echo "🔑 Your sudo password is required for installation. Please enter it now:"
 	sudo -v
 }

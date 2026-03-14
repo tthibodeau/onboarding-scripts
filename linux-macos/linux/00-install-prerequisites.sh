@@ -39,14 +39,12 @@ case "$PKG_MANAGER" in
 		linux_packages=(
 			git wget gpg unzip zip jq
 			build-essential
-			powershell
 		)
 		;;
 	dnf)
 		linux_packages=(
 			git wget gnupg2 unzip zip jq
 			gcc gcc-c++ make
-			powershell
 		)
 		;;
 	pacman)
@@ -60,10 +58,23 @@ esac
 pkg_update
 pkg_install "${linux_packages[@]}"
 
-# PowerShell on Arch is an AUR package — install separately
-if [[ "$PKG_MANAGER" == "pacman" ]]; then
-	AUR_HELPER=$(command -v yay || command -v paru)
-	$AUR_HELPER -S --needed --noconfirm powershell-bin
+# PowerShell — install separately (may not be available for all distro versions)
+if ! command -v pwsh &>/dev/null; then
+	case "$PKG_MANAGER" in
+		apt|dnf)
+			if ! pkg_install powershell 2>/dev/null; then
+				echo "⚠️  PowerShell package not available. Installing via Homebrew..."
+				init_brew_env
+				brew install powershell
+			fi
+			;;
+		pacman)
+			AUR_HELPER=$(command -v yay || command -v paru)
+			$AUR_HELPER -S --needed --noconfirm powershell-bin
+			;;
+	esac
+else
+	echo "✅ PowerShell is already installed: $(pwsh --version)"
 fi
 
 install_1Password() {
@@ -166,7 +177,7 @@ install_1Password
 curl -Lo MesloNerdFont.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Meslo.zip
 
 sudo mkdir /usr/share/fonts/MesloNerdFont/ -p
-sudo unzip MesloNerdFont.zip -d /usr/share/fonts/MesloNerdFont/
+sudo unzip -o MesloNerdFont.zip -d /usr/share/fonts/MesloNerdFont/
 sudo rm MesloNerdFont.zip
 fc-cache -fv
 ######################################################################################
