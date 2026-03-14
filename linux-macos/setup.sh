@@ -2,6 +2,22 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Enable quiet mode — suppresses install output, shows spinners
+export SETUP_QUIET=1
+export SETUP_LOG="/tmp/setup-$(date +%Y%m%d-%H%M%S).log"
+
+# Detect platform
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+	PLATFORM_DIR="$SCRIPT_DIR/linux"
+	PLATFORM="Linux"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+	PLATFORM_DIR="$SCRIPT_DIR/macos"
+	PLATFORM="macOS"
+else
+	echo "❌ Unsupported platform: $OSTYPE"
+	exit 1
+fi
+
 # Grant temporary passwordless sudo for the duration of setup.
 # Homebrew resets sudo timestamps and sudo-rs uses per-process auth,
 # so this is the only reliable way to avoid repeated password prompts.
@@ -23,25 +39,32 @@ enable_sudo() {
 	echo "🛡️ sudo access granted for this session."
 }
 
-disable_sudo() {
-	if [ -f "$SUDOERS_TMP" ]; then
-		sudo rm -f "$SUDOERS_TMP"
-		echo "🛡️ Temporary sudo access removed."
-	fi
+# Build menu dynamically from available scripts in platform directory
+declare -A MENU_SCRIPTS
+declare -A MENU_NAMES
+
+build_menu() {
+	local i=1
+	for script in "$PLATFORM_DIR"/*.sh; do
+		[ -f "$script" ] || continue
+		local basename=$(basename "$script")
+		local name=$(echo "$basename" | sed 's/^[0-9]*-//;s/\.sh$//;s/-/ /g;s/\b\(.\)/\u\1/g')
+		MENU_SCRIPTS[$i]="$script"
+		MENU_NAMES[$i]="$name"
+		((i++))
+	done
+	MENU_COUNT=$((i - 1))
 }
 
 show_menu() {
 	echo ""
-	echo "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓"
-	echo "┃                Workstation Setup                ┃"
-	echo "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+	echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	echo "           Workstation Setup ($PLATFORM)"
+	echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	echo ""
-	echo "  [1] Prerequisites (git, brew, 1Password)"
-	echo "  [2] Zsh Shell (oh-my-zsh, powerlevel10k)"
-	echo "  [3] Development Tools (Node, VS Code, Claude)"
-	echo "  [4] Docker & Kubernetes"
-	echo "  [5] Productivity Tools"
-	echo "  [6] Azure Tools"
+	for i in $(seq 1 $MENU_COUNT); do
+		echo "  [$i] ${MENU_NAMES[$i]}"
+	done
 	echo ""
 	echo "  [A] Install All"
 	echo "  [Q] Quit"
@@ -56,28 +79,27 @@ run_script() {
 	echo "  Running: $name"
 	echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	echo ""
-	# Source scripts in the current shell so sudo credentials are shared
-	source "$SCRIPT_DIR/$script"
+	source "$script"
 }
 
 run_selected() {
 	local selections="$1"
 	for choice in $selections; do
-		case "$choice" in
-			1) run_script "00-install-prerequisites.sh" "Prerequisites" ;;
-			2) run_script "01-install-zsh-shell.sh" "Zsh Shell" ;;
-			3) run_script "02-install-development-tools.sh" "Development Tools" ;;
-			4) run_script "03-install-docker-kubernetes.sh" "Docker & Kubernetes" ;;
-			5) run_script "04-install-productivity-tools.sh" "Productivity Tools" ;;
-			6) run_script "05-install-azure-tools.sh" "Azure Tools" ;;
-			*) echo "Unknown option: $choice" ;;
-		esac
+		if [ -n "${MENU_SCRIPTS[$choice]}" ]; then
+			run_script "${MENU_SCRIPTS[$choice]}" "${MENU_NAMES[$choice]}"
+		else
+			echo "Unknown option: $choice"
+		fi
 	done
 }
 
 run_all() {
-	run_selected "1 2 3 4 5 6"
+	local all_choices=$(seq 1 $MENU_COUNT | tr '\n' ' ')
+	run_selected "$all_choices"
 }
+
+# Build menu from platform scripts
+build_menu
 
 # Enable sudo for the session
 enable_sudo
@@ -103,3 +125,4 @@ done
 
 echo ""
 echo "✅ Setup complete!"
+echo "📋 Full log: $SETUP_LOG"

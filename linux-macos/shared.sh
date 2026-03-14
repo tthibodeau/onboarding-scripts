@@ -5,6 +5,57 @@
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SETUP_LOG="${SETUP_LOG:-/tmp/setup-$(date +%Y%m%d-%H%M%S).log}"
+
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Quiet execution — suppresses output, shows status, logs to file
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Run a command quietly with a spinner. Usage: run_quiet "description" command args...
+run_quiet() {
+	local desc="$1"
+	shift
+
+	# If not in quiet mode, run normally
+	if [ "$SETUP_QUIET" != "1" ]; then
+		echo "📥 $desc"
+		"$@"
+		return $?
+	fi
+
+	local spin='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+	local i=0
+
+	printf "  %-50s " "$desc"
+
+	echo "=== $desc ===" >> "$SETUP_LOG"
+	echo "CMD: $*" >> "$SETUP_LOG"
+
+	"$@" >> "$SETUP_LOG" 2>&1 &
+	local pid=$!
+
+	while kill -0 "$pid" 2>/dev/null; do
+		printf "\b%s" "${spin:i++%${#spin}:1}"
+		sleep 0.1
+	done
+
+	wait "$pid"
+	local exit_code=$?
+
+	if [ $exit_code -eq 0 ]; then
+		printf "\b✅\n"
+	else
+		printf "\b❌\n"
+		echo "    See log: $SETUP_LOG"
+	fi
+
+	return $exit_code
+}
+
+# Show a status message (always visible)
+status() {
+	echo "  $1"
+}
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Distro detection and package manager abstraction
@@ -42,17 +93,27 @@ detect_distro() {
 
 pkg_update() {
 	case "$PKG_MANAGER" in
-		apt) sudo apt-get update ;;
-		dnf) sudo dnf check-update || true ;;
-		pacman) sudo pacman -Sy ;;
+		apt) run_quiet "Updating package lists" sudo apt-get update ;;
+		dnf) run_quiet "Updating package lists" sudo dnf check-update || true ;;
+		pacman) run_quiet "Updating package lists" sudo pacman -Sy ;;
 	esac
 }
 
 pkg_install() {
+	local desc="Installing $*"
 	case "$PKG_MANAGER" in
-		apt) sudo apt-get install -y "$@" ;;
-		dnf) sudo dnf install -y "$@" ;;
-		pacman) sudo pacman -S --needed --noconfirm "$@" ;;
+		apt) run_quiet "$desc" sudo apt-get install -y "$@" ;;
+		dnf) run_quiet "$desc" sudo dnf install -y "$@" ;;
+		pacman) run_quiet "$desc" sudo pacman -S --needed --noconfirm "$@" ;;
+	esac
+}
+
+# Install silently, log output, return exit code — caller handles messaging
+pkg_try_install() {
+	case "$PKG_MANAGER" in
+		apt) sudo apt-get install -y "$@" >> "${SETUP_LOG:-/dev/null}" 2>&1 ;;
+		dnf) sudo dnf install -y "$@" >> "${SETUP_LOG:-/dev/null}" 2>&1 ;;
+		pacman) sudo pacman -S --needed --noconfirm "$@" >> "${SETUP_LOG:-/dev/null}" 2>&1 ;;
 	esac
 }
 
@@ -81,6 +142,33 @@ prompt_sudo() {
 	fi
 	echo "🔑 Your sudo password is required for installation. Please enter it now:"
 	sudo -v
+}
+
+brew_install() {
+	local formula="$1"
+	local flags="${2:-}"
+	local name="${formula##*/}"  # strip tap prefix (e.g. oven-sh/bun/bun → bun)
+	if [ -n "$flags" ]; then
+		run_quiet "Installing $name" brew install $flags "$formula"
+	else
+		run_quiet "Installing $name" brew install "$formula"
+	fi
+}
+
+brew_update() {
+	run_quiet "Updating Homebrew" brew update
+}
+
+install_brew_formulas() {
+	for formula in "$@"; do
+		brew_install "$formula"
+	done
+}
+
+install_brew_casks() {
+	for cask in "$@"; do
+		brew_install "$cask" --cask
+	done
 }
 
 init_brew_env() {
