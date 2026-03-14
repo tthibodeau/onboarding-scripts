@@ -18,9 +18,10 @@ else
 	exit 1
 fi
 
-# Grant temporary passwordless sudo for the duration of setup.
-# Homebrew resets sudo timestamps and sudo-rs uses per-process auth,
-# so this is the only reliable way to avoid repeated password prompts.
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Functions
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 SUDOERS_TMP="/etc/sudoers.d/setup-temp-nopasswd"
 
 enable_sudo() {
@@ -35,7 +36,6 @@ enable_sudo() {
 	echo ""
 	sudo sh -c "echo '$(whoami) ALL=(ALL) NOPASSWD: ALL' > $SUDOERS_TMP && chmod 440 $SUDOERS_TMP"
 
-	# Verify NOPASSWD is working
 	if ! sudo -n true 2>/dev/null; then
 		echo "❌ Failed to enable passwordless sudo. Run scripts individually instead."
 		exit 1
@@ -46,7 +46,6 @@ enable_sudo() {
 	echo "🛡️ sudo access granted for this session."
 }
 
-# Build menu dynamically from available scripts in platform directory
 declare -A MENU_SCRIPTS
 declare -A MENU_NAMES
 
@@ -61,6 +60,17 @@ build_menu() {
 		((i++))
 	done
 	MENU_COUNT=$((i - 1))
+}
+
+show_help() {
+	echo "Usage: setup.sh [OPTIONS]"
+	echo ""
+	echo "Options:"
+	echo "  --all       Install all components (unattended)"
+	echo "  --verbose   Show full install output (no spinners)"
+	echo "  -h, --help  Show this help message"
+	echo ""
+	echo "Without options, an interactive menu is shown."
 }
 
 show_menu() {
@@ -105,31 +115,6 @@ run_all() {
 	run_selected "$all_choices"
 }
 
-# Build menu from platform scripts
-build_menu
-
-# Enable sudo for the session
-enable_sudo
-
-# Handle command-line arguments for unattended mode
-if [[ "$1" == "--all" ]]; then
-	run_all
-	exit 0
-fi
-
-# Interactive menu
-while true; do
-	show_menu
-	read -p "  Select options (e.g. 1 3 4): " input
-
-	case "$input" in
-		[Aa]) run_all; break ;;
-		[Qq]) echo "Goodbye."; exit 0 ;;
-		"") echo "No selection made." ;;
-		*) run_selected "$input"; break ;;
-	esac
-done
-
 post_setup() {
 	echo ""
 	echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -142,7 +127,7 @@ post_setup() {
 		return
 	fi
 
-	# Find failed installs from FAILED: markers written by run_quiet (format: FAILED: desc|reason)
+	# Find failed installs from FAILED: markers (format: FAILED: desc|reason)
 	local failures
 	failures=$(grep '^FAILED: ' "$SETUP_LOG" 2>/dev/null | sed 's/^FAILED: //' | sort -u)
 
@@ -157,7 +142,7 @@ post_setup() {
 		echo ""
 	fi
 
-	# Find actionable suggestions (e.g. "sudo apt autoremove")
+	# Find actionable suggestions (e.g. "sudo apt autoremove") and run them
 	local cleanup
 	cleanup=$(grep -oE "Use '([^']+)'" "$SETUP_LOG" 2>/dev/null \
 		| sed "s/^Use '//;s/'$//" | sort -u \
@@ -198,6 +183,42 @@ post_setup() {
 	echo "  📋 Full log: $SETUP_LOG"
 	echo ""
 }
+
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Main
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+build_menu
+
+# Parse arguments
+for arg in "$@"; do
+	case "$arg" in
+		-h|--help) show_help; exit 0 ;;
+		--verbose) export SETUP_QUIET=0 ;;
+	esac
+done
+
+enable_sudo
+
+# Unattended mode
+for arg in "$@"; do
+	case "$arg" in
+		--all) run_all; post_setup; echo "✅ Setup complete!"; exit 0 ;;
+	esac
+done
+
+# Interactive menu
+while true; do
+	show_menu
+	read -p "  Select options (e.g. 1 3 4): " input
+
+	case "$input" in
+		[Aa]) run_all; break ;;
+		[Qq]) echo "Goodbye."; exit 0 ;;
+		"") echo "No selection made." ;;
+		*) run_selected "$input"; break ;;
+	esac
+done
 
 post_setup
 echo "✅ Setup complete!"

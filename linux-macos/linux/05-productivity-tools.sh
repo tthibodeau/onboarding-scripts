@@ -45,6 +45,8 @@ install_warp() {
 			curl -fsSLo /tmp/warp.deb 'https://app.warp.dev/download?package=deb'
 			sudo dpkg -i /tmp/warp.deb || sudo apt-get install -f -y
 			rm -f /tmp/warp.deb
+			# Warp's .deb adds a broken apt source — remove it
+			sudo rm -f /etc/apt/sources.list.d/warpdotdev.list /etc/apt/trusted.gpg.d/warpdotdev.gpg 2>/dev/null
 			;;
 		dnf)
 			curl -fsSLo /tmp/warp.rpm 'https://app.warp.dev/download?package=rpm'
@@ -60,15 +62,31 @@ install_warp() {
 
 install_slack() {
 	if command -v slack &>/dev/null; then return; fi
+	# Scrape current download URL from Slack (they don't support a 'latest' URL)
+	local slack_deb_url
+	slack_deb_url=$(curl -fsSL 'https://slack.com/downloads/instructions/linux?ddl=1&build=deb' 2>/dev/null \
+		| grep -oE 'https://downloads.slack-edge.com/[^"]*\.deb' | head -1)
+
 	case "$PKG_MANAGER" in
 		apt)
-			curl -fsSLo /tmp/slack.deb "https://downloads.slack-edge.com/desktop-releases/linux/x64/latest/slack-desktop-amd64.deb"
+			if [ -z "$slack_deb_url" ]; then
+				echo "Could not find Slack download URL" >&2
+				return 1
+			fi
+			curl -fsSLo /tmp/slack.deb "$slack_deb_url"
 			sudo dpkg -i /tmp/slack.deb || sudo apt-get install -f -y
 			rm -f /tmp/slack.deb
 			;;
 		dnf)
-			curl -fsSLo /tmp/slack.rpm "https://downloads.slack-edge.com/desktop-releases/linux/x64/latest/slack-desktop-x64.rpm"
-			pkg_install /tmp/slack.rpm
+			local slack_rpm_url
+			slack_rpm_url=$(curl -fsSL 'https://slack.com/downloads/instructions/linux?ddl=1&build=rpm' 2>/dev/null \
+				| grep -oE 'https://downloads.slack-edge.com/[^"]*\.rpm' | head -1)
+			if [ -z "$slack_rpm_url" ]; then
+				echo "Could not find Slack download URL" >&2
+				return 1
+			fi
+			curl -fsSLo /tmp/slack.rpm "$slack_rpm_url"
+			sudo dnf install -y /tmp/slack.rpm
 			rm -f /tmp/slack.rpm
 			;;
 		pacman)

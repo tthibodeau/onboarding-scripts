@@ -1,7 +1,22 @@
 param (
 	[switch]$All,
-	[switch]$CheckForUpdates
+	[switch]$CheckForUpdates,
+	[switch]$Verbose,
+	[switch]$Help
 )
+
+if ($Help -or $args -contains "-h" -or $args -contains "--help") {
+	Write-Host "Usage: setup.ps1 [OPTIONS]"
+	Write-Host ""
+	Write-Host "Options:"
+	Write-Host "  -All              Install all components (unattended)"
+	Write-Host "  -Verbose          Show full install output"
+	Write-Host "  -CheckForUpdates  Check for updates on already-installed tools"
+	Write-Host "  -Help, -h         Show this help message"
+	Write-Host ""
+	Write-Host "Without options, an interactive menu is shown."
+	exit 0
+}
 
 $ScriptDir = $PSScriptRoot
 
