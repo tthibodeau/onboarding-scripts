@@ -35,8 +35,9 @@ macos_brew_cask_apps=(
 
 install_linux_tools() {
 	# echo "Linux install..."
-	return 0
-	# brew update
+	curl -fsSL https://claude.ai/install.sh | bash
+	export PATH="$HOME/.claude/bin:$PATH"
+	echo 'export PATH="$HOME/.claude/bin:$PATH"' >> ~/.zshrc
 }
 
 install_common_tools(){
@@ -92,6 +93,10 @@ install_mac_tools() {
 	# as Brew uses different paths for Apple Silicon and Intel Macs
 	# See https://docs.brew.sh/Installation#unattended-installation
 	eval "$($(which brew) shellenv)"
+
+	curl -fsSL https://claude.ai/install.sh | bash
+	export PATH="$HOME/.claude/bin:$PATH"
+	echo 'export PATH="$HOME/.claude/bin:$PATH"' >> ~/.zshrc
 
 	brew update
 
