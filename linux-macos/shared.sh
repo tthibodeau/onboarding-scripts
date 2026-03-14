@@ -67,6 +67,11 @@ status() {
 	echo "  $1"
 }
 
+# Log a post-install note for the post-setup summary to pick up
+log_note() {
+	echo "NOTE: $1" >> "$SETUP_LOG"
+}
+
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Distro detection and package manager abstraction
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

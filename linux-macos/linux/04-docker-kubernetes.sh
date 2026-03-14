@@ -44,6 +44,7 @@ install_docker() {
 
 	sudo groupadd docker > /dev/null 2>&1
 	sudo usermod -aG docker $USER > /dev/null 2>&1
+	log_note "Log out and back in for Docker group membership to take effect"
 }
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

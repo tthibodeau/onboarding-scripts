@@ -165,18 +165,58 @@ post_setup() {
 		echo ""
 	fi
 
-	# Find reminders (log out, restart, font, etc.)
-	local reminders
-	reminders=$(grep -oiE '(you may need to|note:)[^.]*' "$SETUP_LOG" 2>/dev/null | sort -u)
-	if [ -n "$reminders" ]; then
-		echo "  Reminders:"
-		while IFS= read -r reminder; do
-			echo "    ⚡ ${reminder#note: }"
-		done <<< "$reminders"
+	# Collect all notes from:
+	# 1. NOTE: markers from log_note() in scripts
+	# 2. Installer advisories (you may need, we recommend, etc.)
+	# 3. Next steps blocks from Homebrew etc.
+	local notes=""
+
+	# log_note() markers
+	local log_notes
+	log_notes=$(grep '^NOTE: ' "$SETUP_LOG" 2>/dev/null | sed 's/^NOTE: //') || true
+	[ -n "$log_notes" ] && notes="$log_notes"
+
+	# Installer advisories
+	local advisories
+	advisories=$(grep -iE 'you may need to|you should|we recommend|remember to' "$SETUP_LOG" 2>/dev/null \
+		| sed 's/^- //') || true
+	[ -n "$advisories" ] && notes="${notes:+$notes
+}$advisories"
+
+	# Next steps blocks (extract bullet points, filter noise)
+	local next_steps
+	next_steps=$(sed -n '/^==> Next steps:/,/^===/p' "$SETUP_LOG" 2>/dev/null \
+		| grep -E '^\s*-' | sed 's/^\s*- //' \
+		| grep -viE 'run brew help|further documentation|run these commands.*PATH') || true
+	[ -n "$next_steps" ] && notes="${notes:+$notes
+}$next_steps"
+
+	# Deduplicate
+	notes=$(echo "$notes" | sort -u | sed '/^$/d')
+
+	if [ -n "$notes" ]; then
+		echo "  Notes from installers:"
+		while IFS= read -r note; do
+			[ -z "$note" ] && continue
+			# Check if this suggestion was already handled by our scripts
+			local handled=false
+			case "$note" in
+				*"install build-essential"*) dpkg -s build-essential &>/dev/null && handled=true ;;
+				*"install GCC"*|*"install gcc"*) command -v gcc &>/dev/null && handled=true ;;
+				*"Homebrew's dependencies"*) handled=true ;;
+				*"add Homebrew to your PATH"*) grep -q 'brew shellenv' ~/.zshrc 2>/dev/null && handled=true ;;
+			esac
+
+			if [ "$handled" = true ]; then
+				echo "    ✅ $note (already done)"
+			else
+				echo "    ⚡ $note"
+			fi
+		done <<< "$notes"
 		echo ""
 	fi
 
-	if [ -z "$failures" ] && [ -z "$cleanup" ] && [ -z "$reminders" ]; then
+	if [ -z "$failures" ] && [ -z "$cleanup" ] && [ -z "$notes" ]; then
 		echo "  ✅ No issues"
 	fi
 
