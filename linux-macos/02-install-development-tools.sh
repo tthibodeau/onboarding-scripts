@@ -30,17 +30,15 @@ done
 
 # Bun - use official install script (brew bottle not available on Linux)
 curl -fsSL https://bun.sh/install | bash
-echo 'export BUN_INSTALL="$HOME/.bun"' >> ~/.zshrc
-echo 'export PATH="$BUN_INSTALL/bin:$PATH"' >> ~/.zshrc
+append_to_zshrc 'export BUN_INSTALL="$HOME/.bun"'
+append_to_zshrc 'export PATH="$BUN_INSTALL/bin:$PATH"'
 
 configure_nvm() {
 	mkdir -p ~/.nvm
-	# Adds NVM configuration to .zshrc for persistence in a single command
-	cat >>~/.zshrc <<-'EOL'
-		export NVM_DIR="$HOME/.nvm"
-		[ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ] && \. "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"                                       # This loads nvm
-		[ -s "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ] && \. "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" # This loads nvm bash_completion
-	EOL
+	# Adds NVM configuration to .zshrc for persistence
+	append_to_zshrc 'export NVM_DIR="$HOME/.nvm"'
+	append_to_zshrc '[ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ] && \. "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"'
+	append_to_zshrc '[ -s "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ] && \. "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"'
 
 	# For current shell session
 	export NVM_DIR="$HOME/.nvm"
@@ -59,10 +57,7 @@ configure_nvm() {
 }
 
 configure_pnpm() {
-	cat >>~/.zshrc <<-'EOL'
-		# pnpm shorthand
-		p() { pnpm "$@"; }
-	EOL
+	append_to_zshrc 'p() { pnpm "$@"; }'
 	echo "✅ Installed pnpm version: $(pnpm -v)" # Should show version
 }
 

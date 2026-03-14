@@ -41,9 +41,9 @@ for app in "${common_apps[@]}"; do
 done
 
 # Add brew shell environment variables to shell profiles
-echo 'eval $($(which brew) shellenv)' >> ~/.profile
-echo 'eval $($(which brew) shellenv)' >> ~/.bashrc
-echo 'eval $($(which brew) shellenv)' >> ~/.zshrc
+grep -qF 'brew shellenv' ~/.profile 2>/dev/null || echo 'eval $($(which brew) shellenv)' >> ~/.profile
+grep -qF 'brew shellenv' ~/.bashrc 2>/dev/null || echo 'eval $($(which brew) shellenv)' >> ~/.bashrc
+append_to_zshrc 'eval $($(which brew) shellenv)'
 
 echo
 

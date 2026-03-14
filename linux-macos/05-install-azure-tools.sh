@@ -14,9 +14,8 @@ brew install azure-cli
 
 # Azure command-line auto-completion
 source $(find $HOMEBREW_CELLAR -regex '.*azure-cli.*/etc/bash_completion.d/az')
-echo 'source $(find $HOMEBREW_CELLAR -regex ".*azure-cli.*/etc/bash_completion.d/az")' >> ~/.zshrc
-
-echo "autoload bashcompinit && bashcompinit" >> ~/.zshrc
-echo "autoload -Uz compinit && compinit" >> ~/.zshrc
+append_to_zshrc 'autoload bashcompinit && bashcompinit'
+append_to_zshrc 'autoload -Uz compinit && compinit'
+append_to_zshrc 'source $(find $HOMEBREW_CELLAR -regex ".*azure-cli.*/etc/bash_completion.d/az")'
 
 echo "✅ Azure-CLI installed successfully"

@@ -35,8 +35,8 @@ sed -i -r 's/^plugins=\(.*\)/plugins=\(git brew docker mvn kubectl zsh-autosugge
 
 # Fix for NTFS directory color being unreadable green background color
 # https://blog.jongallant.com/2020/06/wsl-ls-folder-highlight/
-echo 'LS_COLORS=$LS_COLORS:'\''ow=1;34:'\'' ; export LS_COLORS' >> $ZSHRC
-echo 'export SHELL=$(which zsh)' >> $ZSHRC
+append_to_zshrc "LS_COLORS=\$LS_COLORS:'ow=1;34:' ; export LS_COLORS"
+append_to_zshrc 'export SHELL=$(which zsh)'
 
 echo "🔄 Changing default shell to zsh..."
 # change default shell to zsh (use sudo to avoid password prompt)

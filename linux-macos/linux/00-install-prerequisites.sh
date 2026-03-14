@@ -152,11 +152,8 @@ REPO'
 
 		# Create wrapper functions to use Windows OpenSSH (required for 1Password SSH agent)
 		# Use which to dynamically locate the Windows binaries
-		cat >>~/.zshrc <<-'EOL'
-		# 1Password SSH integration for WSL - use Windows OpenSSH
-		ssh() { "$(which ssh.exe)" "$@"; }
-		ssh-add() { "$(which ssh-add.exe)" "$@"; }
-EOL
+		append_to_zshrc 'ssh() { "$(which ssh.exe)" "$@"; }'
+		append_to_zshrc 'ssh-add() { "$(which ssh-add.exe)" "$@"; }'
 
 		echo "✅ 1Password / Git for WSL integration configured"
 		echo "⚡ Follow https://developer.1password.com/docs/ssh/integrations/wsl/#sign-git-commits-with-ssh for further 1Password WSL configuration details."

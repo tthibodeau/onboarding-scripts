@@ -8,7 +8,7 @@ eval "$($(which brew) shellenv)"
 
 curl -fsSL https://claude.ai/install.sh | bash
 export PATH="$HOME/.claude/bin:$PATH"
-echo 'export PATH="$HOME/.claude/bin:$PATH"' >> ~/.zshrc
+append_to_zshrc 'export PATH="$HOME/.claude/bin:$PATH"'
 
 macos_brew_cask_apps=(
 	fork

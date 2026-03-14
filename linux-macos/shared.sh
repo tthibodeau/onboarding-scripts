@@ -89,6 +89,12 @@ init_brew_env() {
 	eval "$($(which brew) shellenv)"
 }
 
+# Append a line to ~/.zshrc only if it doesn't already exist
+append_to_zshrc() {
+	local line="$1"
+	grep -qF "$line" ~/.zshrc 2>/dev/null || echo "$line" >> ~/.zshrc
+}
+
 configure_git() {
 	echo "🔧 Configuring Git..."
 
