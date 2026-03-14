@@ -13,11 +13,14 @@ Workstation onboarding scripts that automate installation and configuration of d
 
 ### Linux/macOS scripts (`linux-macos/`)
 
-Numbered shell scripts run sequentially in Bash or Zsh (not `sh`). Each script:
+Gateway scripts detect OS and source platform-specific scripts from `linux/` or `macos/`, then run common logic. `shared.sh` provides helpers: `assert_not_root`, `prompt_sudo`, `init_brew_env`, `configure_git`, `append_to_zshrc`, and package manager abstraction (`pkg_update`, `pkg_install`) for apt, dnf, and pacman.
+
+Key patterns:
 - Guards against running as root (`sudo` is requested at runtime via `sudo -v`)
-- Detects OS via `$OSTYPE` to branch between Linux (`apt-get`) and macOS (`brew`) paths
-- Uses Homebrew as the common package manager across both platforms
-- Appends shell config to `~/.zshrc` (and `~/.bashrc`/`~/.profile` where needed)
+- Detects OS via `$OSTYPE` to branch between Linux and macOS paths
+- Detects Linux distro via `/etc/os-release` — supports Ubuntu/Debian, Fedora/RHEL, Arch/Manjaro
+- **Homebrew installs must always run last** — Homebrew resets the `sudo -v` credential cache
+- Uses `append_to_zshrc` to prevent duplicate entries on repeated runs
 
 ### Windows scripts (`windows/`)
 

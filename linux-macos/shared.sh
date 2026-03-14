@@ -24,10 +24,7 @@ detect_distro() {
 		ubuntu|debian|linuxmint|pop)
 			PKG_MANAGER="apt"
 			;;
-		fedora)
-			PKG_MANAGER="dnf"
-			;;
-		rhel|centos|rocky|alma)
+		fedora|rhel|centos|rocky|alma)
 			PKG_MANAGER="dnf"
 			;;
 		arch|manjaro|endeavouros)
@@ -93,6 +90,21 @@ init_brew_env() {
 append_to_zshrc() {
 	local line="$1"
 	grep -qF "$line" ~/.zshrc 2>/dev/null || echo "$line" >> ~/.zshrc
+}
+
+# Append a line to a shell profile only if it doesn't already exist
+append_to_profile() {
+	local file="$1"
+	local line="$2"
+	grep -qF "$line" "$file" 2>/dev/null || echo "$line" >> "$file"
+}
+
+# Get AUR helper (yay or paru) for Arch-based distros
+get_aur_helper() {
+	command -v yay || command -v paru || {
+		echo "❌ No AUR helper found. Install yay or paru first." >&2
+		return 1
+	}
 }
 
 configure_git() {

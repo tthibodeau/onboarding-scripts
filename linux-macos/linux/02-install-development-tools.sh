@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 echo "🐧 Linux install..."
 
-curl -fsSL https://claude.ai/install.sh | bash
-export PATH="$HOME/.claude/bin:$PATH"
-append_to_zshrc 'export PATH="$HOME/.claude/bin:$PATH"'
-
 # VS Code install (brew --cask is macOS-only)
 case "$PKG_MANAGER" in
 	apt)
@@ -24,7 +20,7 @@ case "$PKG_MANAGER" in
 		pkg_install code
 		;;
 	pacman)
-		AUR_HELPER=$(command -v yay || command -v paru)
+		AUR_HELPER=$(get_aur_helper)
 		$AUR_HELPER -S --needed --noconfirm visual-studio-code-bin
 		;;
 esac

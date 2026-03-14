@@ -58,18 +58,18 @@ esac
 pkg_update
 pkg_install "${linux_packages[@]}"
 
-# PowerShell — install separately (may not be available for all distro versions)
+# PowerShell — try native package manager first, track if brew fallback needed
+PWSH_NEEDS_BREW=false
 if ! command -v pwsh &>/dev/null; then
 	case "$PKG_MANAGER" in
 		apt|dnf)
 			if ! pkg_install powershell 2>/dev/null; then
-				echo "⚠️  PowerShell package not available. Installing via Homebrew..."
-				init_brew_env
-				brew install powershell
+				echo "⚠️  PowerShell package not available. Will install via Homebrew after sudo tasks."
+				PWSH_NEEDS_BREW=true
 			fi
 			;;
 		pacman)
-			AUR_HELPER=$(command -v yay || command -v paru)
+			AUR_HELPER=$(get_aur_helper)
 			$AUR_HELPER -S --needed --noconfirm powershell-bin
 			;;
 	esac
@@ -125,17 +125,15 @@ REPO'
 			;;
 		pacman)
 			# 1Password is available via AUR
-			AUR_HELPER=$(command -v yay || command -v paru)
+			AUR_HELPER=$(get_aur_helper)
 			$AUR_HELPER -S --needed --noconfirm 1password 1password-cli
 			;;
 	esac
 
-	# install 1password-cli Auto-Complete
-	if [ "$SHELL" = "/bin/bash" ]; then
-		source <(op completion bash)
+	# install 1password-cli Auto-Complete for current shell
+	if command -v op &>/dev/null; then
+		eval "$(op completion zsh)"
 	fi
-
-	eval $(op completion zsh)
 
 	# Add the 1Password SSH agent to the SSH configuration
 	mkdir -p ~/.ssh
@@ -169,12 +167,21 @@ install_1Password
 
 ######################################################################################
 # This is only required for native Linux, not WSL
-# Install Nerd-fonts
-# Meslo is recommended
-curl -Lo MesloNerdFont.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Meslo.zip
-
-sudo mkdir /usr/share/fonts/MesloNerdFont/ -p
-sudo unzip -o MesloNerdFont.zip -d /usr/share/fonts/MesloNerdFont/
-sudo rm MesloNerdFont.zip
-fc-cache -fv
+# Install Nerd-fonts (Meslo recommended for Powerlevel10k)
+if [ ! -d /usr/share/fonts/MesloNerdFont ] || [ -z "$(ls -A /usr/share/fonts/MesloNerdFont 2>/dev/null)" ]; then
+	curl -Lo /tmp/MesloNerdFont.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Meslo.zip
+	sudo mkdir -p /usr/share/fonts/MesloNerdFont/
+	sudo unzip -o /tmp/MesloNerdFont.zip -d /usr/share/fonts/MesloNerdFont/
+	rm -f /tmp/MesloNerdFont.zip
+	fc-cache -fv
+else
+	echo "✅ Meslo Nerd Font is already installed."
+fi
 ######################################################################################
+
+# Deferred Homebrew install — runs last since brew resets sudo -v
+if [ "$PWSH_NEEDS_BREW" = true ]; then
+	echo "📥 Installing PowerShell via Homebrew..."
+	init_brew_env
+	brew install powershell
+fi
