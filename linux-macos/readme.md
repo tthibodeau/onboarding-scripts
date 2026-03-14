@@ -2,6 +2,7 @@
 
 - Automated installation and configuration of development tools and environment settings.
 - Scripts are organized by functional area, allowing you to run only what you need.
+- Each gateway script auto-detects the OS and runs the appropriate platform-specific script from `linux/` or `macos/`
 
 ## Run in Bash/Zsh (sh not supported)
 Open a shell and execute these scripts to install/configure default apps & settings
@@ -10,8 +11,24 @@ Open a shell and execute these scripts to install/configure default apps & setti
 ./00-install-prerequisites.sh
 ./01-install-zsh-shell.sh
 ./02-install-development-tools.sh
-./03...
-./04...
-./05...
+./03-install-docker-kubernetes.sh
+./04-install-productivity-tools.sh
+./05-install-azure-tools.sh
+```
 
+## Structure
+```
+├── 00-05*.sh          # Gateway scripts (OS detection → platform branch → common)
+├── shared.sh          # Shared functions (sudo guard, brew init, configure_git)
+├── linux/             # Linux/WSL-specific scripts
+│   ├── 00-install-prerequisites.sh
+│   ├── 01-install-zsh-shell.sh
+│   ├── 02-install-development-tools.sh
+│   └── 03-install-docker-kubernetes.sh
+└── macos/             # macOS-specific scripts
+    ├── 00-install-prerequisites.sh
+    ├── 01-install-zsh-shell.sh
+    ├── 02-install-development-tools.sh
+    ├── 03-install-docker-kubernetes.sh
+    └── 04-install-productivity-tools.sh
 ```

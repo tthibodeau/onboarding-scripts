@@ -1,21 +1,12 @@
 #!/usr/bin/env bash
 
-if [[ "$OSTYPE" == "linux-gnu"* ]]
-then
-	echo "🐧 Linux install..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/shared.sh"
 
+assert_not_root
 
-elif [[ "$OSTYPE" == "darwin"* ]]
-then
-	echo "🍎 MacOS install..."
-
-
-fi
-
-# Set the brew shell environment variables (using command found with "which brew" to automatically use the right path)
-# as Brew uses different paths for Apple Silicon and Intel Macs
-# See https://docs.brew.sh/Installation#unattended-installation
-eval "$($(which brew) shellenv)"
+# Common: Azure CLI (same for both platforms via Homebrew)
+init_brew_env
 
 echo '📥 Azure-CLI Installing...'
 brew update
@@ -29,5 +20,3 @@ echo "autoload bashcompinit && bashcompinit" >> ~/.zshrc
 echo "autoload -Uz compinit && compinit" >> ~/.zshrc
 
 echo "✅ Azure-CLI installed successfully"
-
-
