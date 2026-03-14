@@ -14,7 +14,14 @@
 - `-CheckForUpdates` parameter will force install of newer versions of tools if found
 
 
-## Run in Powershell
+## Quick Start
+```powershell
+.\setup.ps1                       # interactive menu — pick what to install
+.\setup.ps1 -All                  # install everything
+.\setup.ps1 -All -CheckForUpdates # install everything + update existing tools
+```
+
+## Run Individual Scripts
 ```powershell
 ## PS5 & PS7 compatible
 .\00-install-prerequisites.ps1
@@ -23,6 +30,6 @@
 .\01-install-powershell-tools.ps1 -CheckForUpdates
 .\02-install-windows-subsystem-linux.ps1
 .\03-install-development-tools.ps1
-.\04...
-.\05...
+.\04-install-productivity-tools.ps1
+.\05-install-azure-tools.ps1
 ```

@@ -69,6 +69,11 @@ assert_not_root() {
 }
 
 prompt_sudo() {
+	# Skip if setup.sh already authenticated
+	if [ "$SETUP_SUDO_ACTIVE" = "1" ]; then
+		echo "🛡️ sudo access confirmed (via setup.sh)."
+		return
+	fi
 	# Check if sudo is already available (e.g. NOPASSWD configured)
 	if sudo -n true 2>/dev/null; then
 		echo "🛡️ sudo access confirmed."

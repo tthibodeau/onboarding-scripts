@@ -4,9 +4,13 @@
 - Scripts are organized by functional area, allowing you to run only what you need.
 - Each gateway script auto-detects the OS and runs the appropriate platform-specific script from `linux/` or `macos/`
 
-## Run in Bash/Zsh (sh not supported)
-Open a shell and execute these scripts to install/configure default apps & settings
+## Quick Start
+```bash
+./setup.sh          # interactive menu — pick what to install
+./setup.sh --all    # install everything (unattended)
+```
 
+## Run Individual Scripts (Bash/Zsh, not sh)
 ```bash
 ./00-install-prerequisites.sh
 ./01-install-zsh-shell.sh
