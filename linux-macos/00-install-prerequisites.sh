@@ -114,13 +114,16 @@ install_macos_prerequisites() {
 install_linux_prerequisites() {
   echo "🐧 Linux install..."
 
+
+  sudo apt-get update && sudo apt-get install -y curl
+
   # powershell requires the Microsoft repository to be added
   wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb
   sudo dpkg -i packages-microsoft-prod.deb
   rm packages-microsoft-prod.deb
+
   # Define list of required packages
   linux_packages=(
-    curl
     git
     wget
     gpg
@@ -134,9 +137,9 @@ install_linux_prerequisites() {
   sudo apt-get update && sudo apt-get install -y "${linux_packages[@]}"
 
 
-    install_1Password_CLI(){
+    install_1Password(){
       echo
-      echo "📥 1Password-CLI Installing..."
+      echo "📥 1Password Installing..."
       echo
 
       # Add the key for the 1Password apt repository
@@ -159,7 +162,7 @@ install_linux_prerequisites() {
         | sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg --yes
 
       # Install 1Password CLI
-      sudo apt-get update && sudo apt-get install -y 1password-cli
+      sudo apt-get update && sudo apt-get install -y 1password-cli 1password
 
       # brew install --cask 1password-cli
 
@@ -201,18 +204,18 @@ EOL
       echo "✅ 1Password-CLI installed successfully"
     }
 
-    install_1Password_CLI
+    install_1Password
 
     ######################################################################################
     # This is only required for native Linux, not WSL
     # Install Nerd-fonts
     # Meslo is recommended
-    # curl -Lo MesloNerdFont.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Meslo.zip
+    curl -Lo MesloNerdFont.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Meslo.zip
 
-    # sudo mkdir /usr/share/fonts/MesloNerdFont/ -p
-    # sudo unzip MesloNerdFont.zip -d /usr/share/fonts/MesloNerdFont/
-    # sudo rm MesloNerdFont.zip
-    # fc-cache -fv
+    sudo mkdir /usr/share/fonts/MesloNerdFont/ -p
+    sudo unzip MesloNerdFont.zip -d /usr/share/fonts/MesloNerdFont/
+    sudo rm MesloNerdFont.zip
+    fc-cache -fv
     ######################################################################################
 }
 
