@@ -42,8 +42,16 @@ enable_sudo() {
 	fi
 
 	export SETUP_SUDO_ACTIVE=1
-	trap 'sudo rm -f $SUDOERS_TMP 2>/dev/null; echo ""; echo "🛡️ Temporary sudo access removed."' EXIT
+	export SETUP_CREATED_SUDOERS=1
 	echo "🛡️ sudo access granted for this session."
+}
+
+disable_sudo() {
+	if [ "$SETUP_CREATED_SUDOERS" = "1" ] && [ -f "$SUDOERS_TMP" ]; then
+		sudo rm -f "$SUDOERS_TMP" 2>/dev/null
+		echo ""
+		echo "🛡️ Temporary sudo access removed."
+	fi
 }
 
 declare -A MENU_SCRIPTS
@@ -239,11 +247,12 @@ for arg in "$@"; do
 done
 
 enable_sudo
+trap 'disable_sudo' EXIT
 
 # Unattended mode
 for arg in "$@"; do
 	case "$arg" in
-		--all) run_all; post_setup; echo "✅ Setup complete!"; exit 0 ;;
+		--all) run_all; post_setup; disable_sudo; echo "✅ Setup complete!"; exit 0 ;;
 	esac
 done
 
@@ -261,4 +270,5 @@ while true; do
 done
 
 post_setup
+disable_sudo
 echo "✅ Setup complete!"

@@ -23,6 +23,12 @@ run_quiet() {
 		return $?
 	fi
 
+	# If already inside a run_quiet (nested call), run inline and log only
+	if [ "$_RUN_QUIET_NESTED" = "1" ]; then
+		"$@" >> "$SETUP_LOG" 2>&1
+		return $?
+	fi
+
 	local spin='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
 	local i=0
 
@@ -31,7 +37,7 @@ run_quiet() {
 	echo "=== $desc ===" >> "$SETUP_LOG"
 	echo "CMD: $*" >> "$SETUP_LOG"
 
-	"$@" >> "$SETUP_LOG" 2>&1 &
+	_RUN_QUIET_NESTED=1 "$@" >> "$SETUP_LOG" 2>&1 &
 	local pid=$!
 
 	while kill -0 "$pid" 2>/dev/null; do
